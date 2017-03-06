@@ -6,6 +6,7 @@ public class RotateHand : MonoBehaviour {
 
     public float range;
     public GameObject wheel_center;
+    public GameObject wheel_handler;
     public float circle_to_num_of_flags;
 
     public GameObject wheel;
@@ -15,6 +16,7 @@ public class RotateHand : MonoBehaviour {
     float flag_offset;
     float angle;
     Vector3 center_pos;
+    Vector3 handle_pos;
     float last_angle;
     bool grabbing;
     bool rotating;
@@ -31,6 +33,8 @@ public class RotateHand : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         center_pos = wheel_center.transform.position;
+        handle_pos = wheel_handler.transform.position;
+
         update_grab();
         update_rotation();     
         set_rotation();
@@ -44,7 +48,7 @@ public class RotateHand : MonoBehaviour {
 
     bool check_rotating() {
         //Debug.Log(Vector3.Distance(transform.position, center_pos));
-        return grabbing && (Vector3.Distance(transform.position, center_pos) <= range);
+        return grabbing && (Vector3.Distance(transform.position, handle_pos) <= range);
     }
 
     float get_angle() {
