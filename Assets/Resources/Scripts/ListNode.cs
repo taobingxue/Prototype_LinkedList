@@ -40,7 +40,7 @@ public class ListNode : MonoBehaviour {
             Debug.Log("Hehe!");
         }
         ring[ty] = Instantiate(selected_ring[ty]) as GameObject;
-        ring[ty].transform.parent = transform;
+        ring[ty].transform.parent = transform.FindChild("flagletter");
         ring[ty].transform.localPosition = Vector3.zero;
         ring[ty].transform.localScale = Vector3.one;
     }
