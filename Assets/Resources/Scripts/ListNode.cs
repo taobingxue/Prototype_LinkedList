@@ -11,11 +11,13 @@ public class ListNode : MonoBehaviour {
 
     public char ch = ' ';
     public GameObject next_node = null;
+    public int index;
 
     private void Awake() {
         ring = new GameObject[2];
         ring[0] = null;
         ring[1] = null;
+        index = -1;
     }
 
 	// Use this for initialization

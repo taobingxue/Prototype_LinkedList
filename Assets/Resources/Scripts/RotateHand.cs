@@ -13,7 +13,6 @@ public class RotateHand : MonoBehaviour {
 
     public TextMesh text;
 
-    float flag_offset;
     float angle;
     Vector3 center_pos;
     Vector3 handle_pos;
@@ -22,7 +21,6 @@ public class RotateHand : MonoBehaviour {
     bool rotating;
 	// Use this for initialization
 	void Start () {
-        flag_offset = 0;
         angle = 0;
         Debug.Assert(wheel_center != null);
         last_angle = 0;
@@ -41,6 +39,10 @@ public class RotateHand : MonoBehaviour {
 
        // text.text = "grab: " + grabbing + "\nrotating: " + rotating + "\nangle = " + angle + "\ndis = " + Vector3.Distance(transform.position, center_pos);
 	}
+
+    public float get_offset() {
+        return angle / 360 * circle_to_num_of_flags;
+    }
 
     bool check_grab() {
         return (OVRInput.Get(OVRInput.Button.PrimaryHandTrigger) || OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger));
@@ -86,7 +88,7 @@ public class RotateHand : MonoBehaviour {
                 last_angle = new_angle;
             }
             else {
-                angle = (angle + dis_angle(last_angle, new_angle)) % 360;
+                angle = angle + dis_angle(last_angle, new_angle);
                 last_angle = new_angle;
             }
         }
