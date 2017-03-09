@@ -13,7 +13,9 @@ public class FakeRope : MonoBehaviour {
     public Transform end;
     public bool is_template;
     public GameObject[] selected_ring;
-    GameObject[] ring;
+	public float vanishing_x;
+    
+	GameObject[] ring;
 
     public Transform test_target;
 
@@ -22,8 +24,8 @@ public class FakeRope : MonoBehaviour {
     protected FakeRope connecting_to;
     //end connect with connecting to's start
     protected FakeRope come_from;
+    protected LineRenderer rend;
 
-    private LineRenderer rend;
     private Vector3[] last_positions = new Vector3[2];
     private float rope_dis;
     int roller = 0; 
@@ -46,6 +48,7 @@ public class FakeRope : MonoBehaviour {
 
         last_positions[0] = start.position;
         last_positions[1] = end.position;
+		
 
     }
     #endregion
@@ -77,6 +80,8 @@ public class FakeRope : MonoBehaviour {
         }
         rend.SetPositions(my_rope_nodes);
         rope_dis = Vector3.Distance(my_rope_nodes[0], my_rope_nodes[SUBDIV - 1]) / (SUBDIV - 1);
+		Color rc = Random.ColorHSV(); 
+		rend.SetColors(rc,rc);
     }
 
     /*---------Rope UPdate Function----------------------------------------------------
@@ -85,7 +90,7 @@ public class FakeRope : MonoBehaviour {
      *    node[x+1] = (node[x+2] - node[x]).norm() * dis + node[x];   
      * No spring first  
      ----------------------------------------------------------------------------------*/
-    void update_my_rope( bool order = true) {
+    void update_my_rope(bool order = true) {
         int i = 1;
         Vector3 dir;
         if (order)
@@ -118,6 +123,7 @@ public class FakeRope : MonoBehaviour {
         }
         rend.SetPositions(my_rope_nodes);
     }
+
     readonly Vector3 offset_flag = new Vector3(0f, -0.2f, -0.18f);
     void bi_dir_movement(bool start_move = true) {
         if (start_move){
@@ -135,7 +141,12 @@ public class FakeRope : MonoBehaviour {
 
     void update_flag_pos() {
         Transform flag = transform.FindChild("LetterFlag");
-        flag.position =  offset_flag + my_rope_nodes[(SUBDIV - 1) / 2]; 
+        flag.position =  offset_flag + my_rope_nodes[(SUBDIV - 1) / 2];
+		if (flag.position.x > vanishing_x) 
+			flag.gameObject.SetActive(false);
+		else 
+			flag.gameObject.SetActive(true);
+		
     }
 
 
@@ -189,7 +200,9 @@ public class FakeRope : MonoBehaviour {
             Transform old_start = start;
             start = _rp.end;
             Destroy(old_start.gameObject);
-            _rp.come_from = this;
+			//only update when _rp does not have constraint
+			if(_rp.come_from == null)
+				_rp.come_from = this;
             connecting_to = _rp;
         }      
         return true;
@@ -200,9 +213,14 @@ public class FakeRope : MonoBehaviour {
         tmp_start_node.transform.position = start.position + 0.2f * Vector3.one;
         tmp_start_node.name = "start";
         tmp_start_node.transform.SetParent(transform);
+		tmp_start_node.transform.localScale = 0.02f * Vector3.one;
         start = tmp_start_node.transform;
         return true;
     }
+
+	public bool not_connect_others() {
+		return connecting_to == null;
+	}
 
     #endregion
 
@@ -210,7 +228,7 @@ public class FakeRope : MonoBehaviour {
     public char ch;
     public void set_character(char _ch)
     {
-        transform.FindChild("Canvas").FindChild("flagletter").gameObject.GetComponent<Text>().text = _ch + "";
+        transform.FindChild("LetterFlag").FindChild("Canvas").FindChild("flagletter").GetComponent<Text>().text = _ch + "";
         ch = _ch;
     }
 
