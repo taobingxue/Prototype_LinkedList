@@ -50,8 +50,10 @@ public class LinkedRope : MonoBehaviour {
         }
 	}
 
-	public bool attach_ropes(Transform src, Transform dest = null) {
-		if (src.GetComponent<FakeRope>() == null){
+	public bool attach_ropes(Transform hand, Transform src, Transform dest = null) {
+
+        hand.FindChild("start").SetParent(src);
+        if (src.GetComponent<FakeRope>() == null){
 			Debug.Log("Nothing to be operated.");
 			return false;
 		}
@@ -74,10 +76,16 @@ public class LinkedRope : MonoBehaviour {
 	/*++++++++++++++!!!!!!!!!!!!!!!!!!!!++++++++++++++++++++++++
 				Please call this when grabbing!
 	++++++++++++++++!!!!!!!!!!!!!!!!!!!!++++++++++++++++++*/
-	public bool grab(Transform target, Transform hand) {
-		//when grab something, move the !START_NODE of a rope with hand
-		
-		return true;
+	public bool grab(Transform hand, Transform target) {
+        //when grab something, move the !START_NODE of a rope with hand
+        FakeRope fk_rp = target.parent.GetComponent<FakeRope>();
+        if (target.parent.FindChild("start") == null){
+            //I am connecting to someone else
+            fk_rp.dettach();
+        }
+        target.parent.FindChild("start").SetParent(hand);
+        target.localPosition = Vector3.zero;
+        return true;
 			
 	}
 

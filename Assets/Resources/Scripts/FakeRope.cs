@@ -25,6 +25,7 @@ public class FakeRope : MonoBehaviour {
     //end connect with connecting to's start
     protected FakeRope come_from;
     protected LineRenderer rend;
+    protected List<FakeRope> candidate;
 
     private Vector3[] last_positions = new Vector3[2];
     private float rope_dis;
@@ -69,7 +70,8 @@ public class FakeRope : MonoBehaviour {
         start.localPosition = new Vector3(-DEFAULT_LEN /2, 0f,0f);
         end.localPosition = new Vector3(DEFAULT_LEN / 2, 0f, 0f);
         rend.numPositions = SUBDIV;
-        my_rope_nodes = new Vector3[SUBDIV]; 
+        my_rope_nodes = new Vector3[SUBDIV];
+        candidate = new List<FakeRope>();
         int i;
         //simple blinear interpolation
         for (i = 0; i < SUBDIV; i++)
@@ -80,8 +82,8 @@ public class FakeRope : MonoBehaviour {
         }
         rend.SetPositions(my_rope_nodes);
         rope_dis = Vector3.Distance(my_rope_nodes[0], my_rope_nodes[SUBDIV - 1]) / (SUBDIV - 1);
-		Color rc = Random.ColorHSV(); 
-		rend.SetColors(rc,rc);
+		Color rc = Random.ColorHSV(0f,1f,0.8f,1f); 
+		rend.material.SetColor("_Color",rc);
     }
 
     /*---------Rope UPdate Function----------------------------------------------------
@@ -142,11 +144,11 @@ public class FakeRope : MonoBehaviour {
     void update_flag_pos() {
         Transform flag = transform.FindChild("LetterFlag");
         flag.position =  offset_flag + my_rope_nodes[(SUBDIV - 1) / 2];
-		if (flag.position.x > vanishing_x) 
-			flag.gameObject.SetActive(false);
-		else 
-			flag.gameObject.SetActive(true);
-		
+
+        if (flag.position.x > vanishing_x)
+            flag.gameObject.SetActive(false);
+        else
+            flag.gameObject.SetActive(true);
     }
 
 
@@ -200,9 +202,11 @@ public class FakeRope : MonoBehaviour {
             Transform old_start = start;
             start = _rp.end;
             Destroy(old_start.gameObject);
-			//only update when _rp does not have constraint
-			if(_rp.come_from == null)
-				_rp.come_from = this;
+            //only update when _rp does not have constraint
+            if (_rp.come_from == null)
+                _rp.come_from = this;
+            else
+                _rp.candidate.Add(this);
             connecting_to = _rp;
         }      
         return true;
@@ -214,6 +218,13 @@ public class FakeRope : MonoBehaviour {
         tmp_start_node.name = "start";
         tmp_start_node.transform.SetParent(transform);
 		tmp_start_node.transform.localScale = 0.02f * Vector3.one;
+        //if who I am connecting to comes from me
+        if (connecting_to.come_from == this){
+            connecting_to.come_from = connecting_to.candidate.Count == 0 ? null : candidate[0];
+        }
+        else {
+            connecting_to.candidate.Remove(this);
+        }
         start = tmp_start_node.transform;
         return true;
     }
