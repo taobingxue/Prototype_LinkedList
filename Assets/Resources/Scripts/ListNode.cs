@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ListNode : MonoBehaviour {
+public class ListNode {
 
     public bool is_template;
     public GameObject[] selected_ring;

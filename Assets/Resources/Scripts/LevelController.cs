@@ -31,20 +31,9 @@ public class LevelController : MonoBehaviour {
     public Level[] levels;
     int idx = 0;
      
-    public int max_size;
-    public GameObject[] lists;
-
-    public GameObject edge_prefab;
-    public GameObject node_prefab;
-
-    public ListNode[] templates;
-
+    public FakeRope[] templates;
+    
     private void Awake() {
-        lists = new GameObject[max_size];
-        for (int i = 0; i < max_size; ++i) {
-            lists[i] = null;
-        }
-
         level_up();
     }
     
@@ -88,36 +77,10 @@ public class LevelController : MonoBehaviour {
     }
 
     void create_flags() {
-        lists[0] = Instantiate(edge_prefab) as GameObject;
-        lists[1] = Instantiate(edge_prefab) as GameObject;
-        lists[0].GetComponent<ListNode>().set_character(' ');
-		lists[1].GetComponent<ListNode>().set_character(' ');
-		
-		int l = levels[idx].init.Length;
-		for (int i = 0; i < l; ++i) {
-			lists[i + 2] = Instantiate(node_prefab) as GameObject;
-		}
-		for (int i = l - 1; i >= 0; --i) {
-			ListNode tmp = lists[i + 2].GetComponent<ListNode>();
-			tmp.set_character(levels[idx].init[i]);
-			if (i < l - 1) {
-				tmp.next_node = lists[i + 3];
-			} else {
-				tmp.next_node = lists[1];
-			}
-		}
-        lists[0].GetComponent<ListNode>().next_node = lists[2];
-
-        for (int i = 0; i < l + 2; ++i) {
-            lists[i].transform.parent = transform;
-        }
+        LinkedRope.instances.init_flags(levels[idx].init);
     }
     
     void clean_level() {
-        for (int i = 0; i < max_size; ++i) {
-            if (lists[i] == null) return ;
-            Destroy(lists[i]);
-            lists[i] = null;
-        }
+        LinkedRope.instance.clean_flags();
     }
 }

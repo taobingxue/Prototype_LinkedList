@@ -7,7 +7,7 @@ public class RotateHand : MonoBehaviour {
     public float range;
     public GameObject wheel_center;
     public GameObject wheel_handler;
-    public float circle_to_num_of_flags;
+   // public float circle_to_num_of_flags;
 
     public GameObject wheel;
 
@@ -40,8 +40,8 @@ public class RotateHand : MonoBehaviour {
        // text.text = "grab: " + grabbing + "\nrotating: " + rotating + "\nangle = " + angle + "\ndis = " + Vector3.Distance(transform.position, center_pos);
 	}
 
-    public float get_offset() {
-        return angle / 360 * circle_to_num_of_flags;
+    public float get_offset_angle() {
+        return angle;
     }
 
     bool check_grab() {
