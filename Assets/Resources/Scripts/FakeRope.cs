@@ -17,8 +17,6 @@ public class FakeRope : MonoBehaviour {
     
 	GameObject[] ring;
 
-    public Transform test_target;
-
     protected Vector3[] my_rope_nodes;
     //start connect to connecting_to 's end 
     protected FakeRope connecting_to;

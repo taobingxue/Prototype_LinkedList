@@ -6,8 +6,6 @@ public class LinkedRope : MonoBehaviour {
     public static LinkedRope instance = null;
 	public GameObject rope_prefab;
 	public float rotate_angle;
-	public Transform test_src;
-	public Transform test_dest;
 	
 	void Awake () {
         if (instance == null)
@@ -17,13 +15,10 @@ public class LinkedRope : MonoBehaviour {
 	}
 
     void Start() {
-		init_flags("test");	
     }
 
 	void Update(){
-		if (Input.GetKeyDown(KeyCode.A)) {
-			attach_ropes(test_src, test_dest);
-		}
+	
 	}
 
 
@@ -78,7 +73,7 @@ public class LinkedRope : MonoBehaviour {
 	++++++++++++++++!!!!!!!!!!!!!!!!!!!!++++++++++++++++++*/
 	public bool grab(Transform hand, Transform target) {
         //when grab something, move the !START_NODE of a rope with hand
-        FakeRope fk_rp = target.parent.GetComponent<FakeRope>();
+        FakeRope fk_rp = target.GetComponent<FakeRope>();
         if (target.parent.FindChild("start") == null){
             //I am connecting to someone else
             fk_rp.dettach();
