@@ -34,13 +34,13 @@ public class LevelController : MonoBehaviour {
     public FakeRope[] templates;
     
     private void Awake() {
-        level_up();
+
     }
     
 	// Use this for initialization
 	void Start () {
-		
-	}
+        level_up();
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -77,10 +77,11 @@ public class LevelController : MonoBehaviour {
     }
 
     void create_flags() {
-        LinkedRope.instances.init_flags(levels[idx].init);
+        LinkedRope.instance.init_flags(levels[idx].init);
+
     }
     
     void clean_level() {
-        LinkedRope.instance.clean_flags();
+        LinkedRope.instance.clear_flags();
     }
 }

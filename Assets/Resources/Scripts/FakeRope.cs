@@ -19,7 +19,7 @@ public class FakeRope : MonoBehaviour {
 
     protected Vector3[] my_rope_nodes;
     //start connect to connecting_to 's end 
-    protected FakeRope connecting_to;
+    public FakeRope connecting_to;
     //end connect with connecting to's start
     protected FakeRope come_from;
     protected LineRenderer rend;
@@ -30,7 +30,7 @@ public class FakeRope : MonoBehaviour {
     int roller = 0; 
 
     #region mono behavior
-    void Start () {
+    void Awake () {
         rend = GetComponent<LineRenderer>();
         instantiate_rope();
         last_positions[0] = start.position;
@@ -65,8 +65,11 @@ public class FakeRope : MonoBehaviour {
         come_from = null;
         start = transform.FindChild("start");
         end = transform.FindChild("end");
+        Debug.LogWarning(gameObject.name +"start:" + start.name);
         start.localPosition = new Vector3(-DEFAULT_LEN /2, 0f,0f);
+        
         end.localPosition = new Vector3(DEFAULT_LEN / 2, 0f, 0f);
+        Debug.LogWarning("end:" + end.name);
         rend.numPositions = SUBDIV;
         my_rope_nodes = new Vector3[SUBDIV];
         candidate = new List<FakeRope>();
@@ -124,7 +127,6 @@ public class FakeRope : MonoBehaviour {
         rend.SetPositions(my_rope_nodes);
     }
 
-    readonly Vector3 offset_flag = new Vector3(0f, -0.2f, -0.18f);
     void bi_dir_movement(bool start_move = true) {
         if (start_move){
             my_rope_nodes[0] = start.transform.position;
@@ -141,7 +143,7 @@ public class FakeRope : MonoBehaviour {
 
     void update_flag_pos() {
         Transform flag = transform.FindChild("LetterFlag");
-        flag.position =  offset_flag + my_rope_nodes[(SUBDIV - 1) / 2];
+        flag.position =  my_rope_nodes[(SUBDIV - 1) / 2];
 
         if (flag.position.x > vanishing_x)
             flag.gameObject.SetActive(false);
@@ -194,6 +196,7 @@ public class FakeRope : MonoBehaviour {
     #region rope operations
     /* attach one side of the rope to some existing node*/
     public bool attach(Transform target, bool start_node = true){
+        if (target == null) return false;
         if (start_node) {
             FakeRope _rp = target.GetComponent<FakeRope>();
             Debug.Log("Attaching my start node onto target's end");
@@ -203,7 +206,7 @@ public class FakeRope : MonoBehaviour {
             //only update when _rp does not have constraint
             if (_rp.come_from == null)
                 _rp.come_from = this;
-            else
+            else 
                 _rp.candidate.Add(this);
             connecting_to = _rp;
         }      
@@ -211,25 +214,35 @@ public class FakeRope : MonoBehaviour {
     }
 
     public bool dettach() {
-        GameObject tmp_start_node = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        tmp_start_node.transform.position = start.position + 0.2f * Vector3.one;
-        tmp_start_node.name = "start";
-        tmp_start_node.transform.SetParent(transform);
-		tmp_start_node.transform.localScale = 0.02f * Vector3.one;
+        if (transform.FindChild("start") == null) {
+            GameObject tmp_start_node = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            tmp_start_node.transform.position = start.position + 0.2f * Vector3.one;
+            tmp_start_node.name = "start";
+            tmp_start_node.transform.SetParent(transform);
+            tmp_start_node.transform.localScale = 0.02f * Vector3.one;
+            start = tmp_start_node.transform;
+        }
         //if who I am connecting to comes from me
-        if (connecting_to.come_from == this){
-            connecting_to.come_from = connecting_to.candidate.Count == 0 ? null : candidate[0];
+        if (connecting_to != null) {
+            if (connecting_to.come_from == this) {
+                connecting_to.come_from = connecting_to.candidate.Count == 0 ? null : candidate[0];
+                Debug.Log("fixing candidates" + connecting_to.candidate.Count);
+            } 
+            else {
+                connecting_to.candidate.Remove(this);
+            }
         }
-        else {
-            connecting_to.candidate.Remove(this);
-        }
-        start = tmp_start_node.transform;
+        connecting_to = null; 
         return true;
     }
 
 	public bool not_connect_others() {
 		return connecting_to == null;
 	}
+
+    public FakeRope next_rope() {
+        return connecting_to;
+    }
 
     #endregion
 
@@ -248,9 +261,10 @@ public class FakeRope : MonoBehaviour {
             Debug.Log("Invalid call.");
         }
         ring[ty] = Instantiate(selected_ring[ty]) as GameObject;
-        ring[ty].transform.parent = transform.FindChild("flagletter");
-        ring[ty].transform.localPosition = Vector3.zero;
+        ring[ty].transform.parent = transform.FindChild("LetterFlag");
+        ring[ty].transform.localPosition = new Vector3(0, -1.6f, 0);
         ring[ty].transform.localScale = Vector3.one;
+        ring[ty].name = "ringring";
     }
 
     public void unselect(int ty = 0)
