@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class FakeRope : MonoBehaviour {
     const int SUBDIV = 30;
     const float THREAD = 0.01f;
-    public static float DEFAULT_LEN = 1f;
+    public static float DEFAULT_LEN = 0.6f;
 
     //start is a fixed position where the rope fixed to
     public Transform start;
@@ -225,7 +225,7 @@ public class FakeRope : MonoBehaviour {
         //if who I am connecting to comes from me
         if (connecting_to != null) {
             if (connecting_to.come_from == this) {
-                connecting_to.come_from = connecting_to.candidate.Count == 0 ? null : candidate[0];
+                connecting_to.come_from = connecting_to.candidate.Count == 0 ? null : connecting_to.candidate[0];
                 Debug.Log("fixing candidates" + connecting_to.candidate.Count);
             } 
             else {
@@ -262,7 +262,7 @@ public class FakeRope : MonoBehaviour {
         }
         ring[ty] = Instantiate(selected_ring[ty]) as GameObject;
         ring[ty].transform.parent = transform.FindChild("LetterFlag");
-        ring[ty].transform.localPosition = new Vector3(0, -1.6f, 0);
+        ring[ty].transform.localPosition = Vector3.up * 0.4f;
         ring[ty].transform.localScale = Vector3.one;
         ring[ty].name = "ringring";
     }

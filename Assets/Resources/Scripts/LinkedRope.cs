@@ -7,6 +7,8 @@ public class LinkedRope : MonoBehaviour {
 
     public static LinkedRope instance = null;
 	public GameObject rope_prefab;
+    public GameObject head;
+    public GameObject tail;
 	public float rotate_angle;
 
     bool init_finished;
@@ -42,7 +44,10 @@ public class LinkedRope : MonoBehaviour {
                 int cnt = still_connect();
                 Debug.Log("path:"+cnt);
                 if (cnt == -1) {
-                    line_end.position += new Vector3(-0.1f, 0.2f, 0f);
+                    //remove start and its sub-tree
+                    //assign new end at the last one pointed to   
+                    //get the instantiate a prefabe rope-end at the end
+                    line_end.position += new Vector3(-0.02f, 0.1f, 0f);
                 }
                 else
                     line_end.position = origin_pos + (cnt + 1) * FakeRope.DEFAULT_LEN * Vector3.left;
@@ -52,15 +57,20 @@ public class LinkedRope : MonoBehaviour {
 	}
 
     int still_connect() {
-        FakeRope fp = end_rope;
+        FakeRope fp = start_rope;
         int cnt = 0;
-        while (fp != start_rope) {
+        while (fp != end_rope) {
+            
             fp = fp.next_rope();
             cnt++;
             if (fp == null) return -1;
         }
         return cnt;
     }
+
+    public void assign_new_end() {
+        
+    } 
 
 	/*Initialize ropes according to input string*/
 	public void init_flags(string s) {
@@ -69,46 +79,49 @@ public class LinkedRope : MonoBehaviour {
 	}
 
 	IEnumerator init_linked_rope (string s) {
-		int cnt = s.Length + 1;
+		int cnt = s.Length + 2;
         Transform last_rope = transform;
         for (int i = 0; i < cnt ; i++) {
             GameObject my_rope = Instantiate(rope_prefab);
             my_rope.transform.SetParent(transform);
-            my_rope.transform.localPosition = i*FakeRope.DEFAULT_LEN * new Vector3(4f, 0f, 0f);
+            my_rope.transform.localPosition =(cnt - i)*FakeRope.DEFAULT_LEN * new Vector3(4f, 0f, 0f);
             yield return new WaitForSeconds(0.1f);
             if (i == 0) {
-                my_rope.GetComponent<FakeRope>().start.position = origin_pos;
-                my_rope.GetComponent<FakeRope>().end.position = origin_pos - new Vector3(FakeRope.DEFAULT_LEN, 0f, 0f);
-                line_start = my_rope.GetComponent<FakeRope>().start;
-                origin_pos_start = line_start.position;
-                start_rope = my_rope.GetComponent<FakeRope>();
+                line_end = my_rope.GetComponent<FakeRope>().start;
+                origin_pos_end = line_end.position;
+                end_rope = my_rope.GetComponent<FakeRope>();
             }
-			if (i > 0){
+			if (i > 0 ){
 				my_rope.GetComponent<FakeRope>().attach(last_rope);
-				my_rope.GetComponent<FakeRope>().set_character(s[i-1]);
+                if(i < cnt -1)
+				    my_rope.GetComponent<FakeRope>().set_character(s[i-1]);
 			}
             last_rope = my_rope.transform;
             yield return new WaitForSeconds(0.1f);
         }
-        line_end = last_rope.GetComponent<FakeRope>().end;
-        end_rope = last_rope.GetComponent<FakeRope>();
-        origin_pos_end = line_end.position;
+        start_rope = last_rope.GetComponent<FakeRope>();
+        line_start = start_rope.end;
+        start_rope.end.position = origin_pos;
+        origin_pos_start = line_start.position;
         init_finished = true;
 	}
 
 
 	public bool attach_ropes(Transform hand, Transform src, Transform dest = null) {
+        if (hand.FindChild("start") == null && src.FindChild("start") == null) {
+            Debug.LogError("The operating node is missing.");
+        }
         hand.FindChild("start").SetParent(src);
         if (src.GetComponent<FakeRope>() == null){
 			Debug.Log("Nothing to be operated.");
 			return false;
 		}
 		FakeRope src_fr = src.GetComponent<FakeRope>();
-		/*if (dest == null) {
+		if (dest == null) {
 			Debug.Log("Dettach.");
 			src_fr.dettach();
 			return true;
-		}*/
+		}
         if (dest.GetComponent<FakeRope>() == end_rope) {
             Debug.LogWarning("Cannot attach to line end.");
             return false;
