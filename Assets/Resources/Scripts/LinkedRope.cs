@@ -11,15 +11,18 @@ public class LinkedRope : MonoBehaviour {
     public GameObject tail;
 	public float rotate_angle;
 
+    public FakeRope start_rope;
+    public FakeRope end_rope;
+
     bool init_finished;
     Vector3 origin_pos;
     Vector3 origin_pos_start;
     Vector3 origin_pos_end;
+    Vector3 fly_velocity= new Vector3(-0.2f,0.2f,0f);
     Transform line_start;
-    Transform line_end;
-    public FakeRope start_rope;
-    public FakeRope end_rope;
-    int roller =0;
+    public Transform line_end;
+
+    public int connection_count = 0;
     
 	
 	void Awake () {
@@ -41,17 +44,9 @@ public class LinkedRope : MonoBehaviour {
                 line_start.position = origin_pos_start + DELTA * angle * Vector3.right;
             else {
                 //search for the path from end to start
-                int cnt = still_connect();
-                Debug.Log("path:"+cnt);
-                if (cnt == -1) {
-                    //remove start and its sub-tree
-                    //assign new end at the last one pointed to   
-                    //get the instantiate a prefabe rope-end at the end
-                    line_end.position += new Vector3(-0.02f, 0.1f, 0f);
+                if (connection_count != -1)  
+                    line_end.position = origin_pos + (connection_count + 1) * FakeRope.DEFAULT_LEN * Vector3.left;
                 }
-                else
-                    line_end.position = origin_pos + (cnt + 1) * FakeRope.DEFAULT_LEN * Vector3.left;
-            }
         }
 	
 	}
@@ -67,10 +62,6 @@ public class LinkedRope : MonoBehaviour {
         }
         return cnt;
     }
-
-    public void assign_new_end() {
-        
-    } 
 
 	/*Initialize ropes according to input string*/
 	public void init_flags(string s) {
@@ -88,6 +79,7 @@ public class LinkedRope : MonoBehaviour {
             yield return new WaitForSeconds(0.1f);
             if (i == 0) {
                 line_end = my_rope.GetComponent<FakeRope>().start;
+                line_end.localScale = 0.2f * Vector3.one;
                 origin_pos_end = line_end.position;
                 end_rope = my_rope.GetComponent<FakeRope>();
             }
@@ -103,8 +95,10 @@ public class LinkedRope : MonoBehaviour {
         line_start = start_rope.end;
         start_rope.end.position = origin_pos;
         origin_pos_start = line_start.position;
+        connection_count = still_connect();
         init_finished = true;
 	}
+
 
 
 	public bool attach_ropes(Transform hand, Transform src, Transform dest = null) {
@@ -120,19 +114,38 @@ public class LinkedRope : MonoBehaviour {
 		if (dest == null) {
 			Debug.Log("Dettach.");
 			src_fr.dettach();
-			return true;
+            connection_count = still_connect();
+            if (connection_count == -1) {
+                StartCoroutine("on_disconnected");
+            }
+            return true;
 		}
-        if (dest.GetComponent<FakeRope>() == end_rope) {
-            Debug.LogWarning("Cannot attach to line end.");
-            return false;
-        }
 		if (src_fr.not_connect_others())
 			src_fr.attach(dest);
 		else {
 			src_fr.dettach();
 			src_fr.attach(dest);
 		}
-		return true;
+        if (dest == start_rope.transform) {
+            start_rope = src_fr;
+            line_start = src_fr.end;
+            line_start.position = origin_pos_start;
+            Debug.LogWarning("attaching to the startnode");
+        }
+
+        if (src_fr == end_rope) {
+            if (dest.GetComponent<FakeRope>() != null) {
+                end_rope = dest.GetComponent<FakeRope>();
+                line_end = end_rope.start;
+                line_end.localScale = 0.2f * Vector3.one;
+            }
+        }
+        //detect connections
+        connection_count = still_connect();
+        if (connection_count == -1) {
+            StartCoroutine("on_disconnected");
+        }
+        return true;
 	}
 	
 	/*++++++++++++++!!!!!!!!!!!!!!!!!!!!++++++++++++++++++++++++
@@ -146,15 +159,11 @@ public class LinkedRope : MonoBehaviour {
             //I am connecting to someone else
             fk_rp.dettach();
         }
-        if (fk_rp == start_rope) {
-            Debug.Log("Cannot dettach head!");
-            return false; 
-        }
+        
         Transform start_node = target.FindChild("start");
         start_node.SetParent(hand);
         start_node.localPosition = Vector3.zero;
-        return true;
-			
+        return true;	
 	}
 
     public bool clear_flags() {
@@ -167,7 +176,54 @@ public class LinkedRope : MonoBehaviour {
         return true;
     }
 
-	private void OnDrawGizmos()
+    IEnumerator on_disconnected() {
+        List<FakeRope> to_be_delete = new List<FakeRope>();
+        Transform velocity_target = line_end;
+        //search for all the children of ENd node
+        Stack<FakeRope> search_stack = new Stack<FakeRope>();
+        search_stack.Push(end_rope);
+        FakeRope currentnode;
+        rope_reconstruction();
+        connection_count = still_connect();
+        while (search_stack.Count > 0) {
+            currentnode = search_stack.Pop();
+            if (to_be_delete.Contains(currentnode))
+                continue;
+            to_be_delete.Add(currentnode);
+            if (currentnode.first_child() == null)
+                continue;
+            else {
+                search_stack.Push(currentnode.first_child());
+                if (currentnode.other_children().Count == 0) continue;
+                else {
+                    foreach (FakeRope fk in currentnode.other_children())
+                        search_stack.Push(fk);
+                }
+            }
+        }
+        int i = 0;
+        while (i < 90) {
+            velocity_target.position +=  fly_velocity;
+            yield return new WaitForEndOfFrame();
+            i++;
+        }
+
+        foreach (FakeRope fk in to_be_delete) {
+            Destroy(fk.gameObject,0.1f);
+        }
+    }
+
+    public void rope_reconstruction() {
+        FakeRope fp = start_rope;
+        while (fp.next_rope() != null) {
+            fp = fp.next_rope();
+        }
+        end_rope = fp;
+        line_end = fp.start;
+        line_end.localScale = 0.2f * Vector3.one;
+    }
+
+    private void OnDrawGizmos()
 	{
 		Gizmos.DrawWireSphere( Vector3.zero, 1f);
 	}

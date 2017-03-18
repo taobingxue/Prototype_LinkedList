@@ -45,7 +45,8 @@ public class RightHand : MonoBehaviour {
         RaycastHit hitInfo;
         Physics.Raycast(transform.position, get_point_dir(), out hitInfo, line_length);
         if (hitInfo.collider != null) {
-            return hitInfo.collider.gameObject;
+            if(hitInfo.collider.transform.parent.tag == "flag")
+                return hitInfo.collider.gameObject;
         }
         
         return null;
@@ -56,7 +57,6 @@ public class RightHand : MonoBehaviour {
         
         GameObject tmp = find_pointing();
         if (tmp != null) {
-            Debug.Log(tmp.name);
             tmp = tmp.transform.parent.gameObject;
         }
         if (tmp != pointing) {
@@ -101,7 +101,7 @@ public class RightHand : MonoBehaviour {
     }
     
     bool check_grabbing() {
-        return (OVRInput.Get(OVRInput.Button.SecondaryHandTrigger) || OVRInput.Get(OVRInput.Button.SecondaryIndexTrigger));
+        return (OVRInput.Get(OVRInput.Button.SecondaryHandTrigger));
     }
     
     void update_grabbing() {
@@ -121,8 +121,8 @@ public class RightHand : MonoBehaviour {
                 LinkedRope.instance.grab(transform, obj.transform);
                 inhand = obj;
             } else {
-                LinkedRope.instance.grab(transform, grab_obj.transform);
-                inhand = grab_obj;
+               if(LinkedRope.instance.grab(transform, grab_obj.transform))
+                    inhand = grab_obj;
             }
         } else if ((!tmp) && grabbing && inhand != null) {
             LinkedRope.instance.attach_ropes(transform, inhand.transform, pointing == null ? null : pointing.transform);

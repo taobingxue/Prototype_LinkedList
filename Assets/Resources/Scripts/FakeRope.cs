@@ -240,6 +240,14 @@ public class FakeRope : MonoBehaviour {
 		return connecting_to == null;
 	}
 
+    public List<FakeRope> other_children() {
+        return candidate;
+    }
+
+    public FakeRope first_child() {
+        return come_from;
+    }
+
     public FakeRope next_rope() {
         return connecting_to;
     }
