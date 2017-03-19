@@ -47,6 +47,7 @@ public class FakeRope : MonoBehaviour {
 
         last_positions[0] = start.position;
         last_positions[1] = end.position;
+        update_arrow();
 		
 
     }
@@ -85,6 +86,25 @@ public class FakeRope : MonoBehaviour {
         rope_dis = Vector3.Distance(my_rope_nodes[0], my_rope_nodes[SUBDIV - 1]) / (SUBDIV - 1);
 		Color rc = Random.ColorHSV(0f,1f,0.8f,1f); 
 		rend.material.SetColor("_Color",rc);
+        update_arrow(true);
+    }
+
+
+    void update_arrow(bool init = false) {
+        LineRenderer ld =transform.FindChild("arrow").GetComponent<LineRenderer>();
+        if (init) {
+            ld.numPositions = 5;     
+            ld.startWidth = 0.05f;
+            ld.endWidth = 0.01f;
+            ld.endColor = new Color(1f, 0f, 0f, 0.5f);
+            ld.startColor = new Color(0f, 0f, 1f, 0.5f);
+        }
+        Vector3[] pos = new Vector3[5];
+        int idx = 0;
+        for (idx = 0; idx < 5; idx++) {
+            pos[idx] = my_rope_nodes[4 - idx]+ Vector3.one * 0.00001f;
+        }
+        ld.SetPositions(pos);
     }
 
     /*---------Rope UPdate Function----------------------------------------------------
@@ -250,6 +270,16 @@ public class FakeRope : MonoBehaviour {
 
     public FakeRope next_rope() {
         return connecting_to;
+    }
+
+    public void turn_clipping(bool on_off) {
+        float val = on_off ? -3.2f : -500f;
+        GetComponent<MeshRenderer>().material.SetFloat("_ClipPoint", val);
+        MeshRenderer[] children_rends = GetComponentsInChildren<MeshRenderer>();
+        foreach (MeshRenderer rend in children_rends) {
+            rend.material.SetFloat("_ClipPoint", val);
+        }
+        vanishing_x = val;
     }
 
     #endregion

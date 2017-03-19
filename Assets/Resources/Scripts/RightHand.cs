@@ -115,6 +115,10 @@ public class RightHand : MonoBehaviour {
             if (grab_obj.GetComponent<FakeRope>().is_template) {
                 GameObject obj = Instantiate(grab_obj) as GameObject;
                 obj.GetComponent<FakeRope>().is_template = false;
+                //Luna
+                grab_obj.SetActive(false);
+                IEnumerator c = recover_template(grab_obj.transform);
+                StartCoroutine(c);
                 while (obj.transform.FindChild("LetterFlag").FindChild("ringring") != null) {
                     DestroyImmediate(obj.transform.FindChild("LetterFlag").FindChild("ringring").gameObject);
                 }
@@ -128,5 +132,11 @@ public class RightHand : MonoBehaviour {
             LinkedRope.instance.attach_ropes(transform, inhand.transform, pointing == null ? null : pointing.transform);
         }
         grabbing = tmp;
+    }
+
+    IEnumerator recover_template(Transform _template) {
+        yield return new WaitForSeconds(5f);
+        _template.gameObject.SetActive(true);
+       
     }
 }

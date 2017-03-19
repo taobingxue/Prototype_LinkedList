@@ -79,7 +79,6 @@ public class LinkedRope : MonoBehaviour {
             yield return new WaitForSeconds(0.1f);
             if (i == 0) {
                 line_end = my_rope.GetComponent<FakeRope>().start;
-                line_end.localScale = 0.2f * Vector3.one;
                 origin_pos_end = line_end.position;
                 end_rope = my_rope.GetComponent<FakeRope>();
             }
@@ -130,14 +129,13 @@ public class LinkedRope : MonoBehaviour {
             start_rope = src_fr;
             line_start = src_fr.end;
             line_start.position = origin_pos_start;
-            Debug.LogWarning("attaching to the startnode");
+            Debug.LogWarning("Attaching to the startnode.");
         }
 
         if (src_fr == end_rope) {
             if (dest.GetComponent<FakeRope>() != null) {
                 end_rope = dest.GetComponent<FakeRope>();
                 line_end = end_rope.start;
-                line_end.localScale = 0.2f * Vector3.one;
             }
         }
         //detect connections
@@ -220,7 +218,6 @@ public class LinkedRope : MonoBehaviour {
         }
         end_rope = fp;
         line_end = fp.start;
-        line_end.localScale = 0.2f * Vector3.one;
     }
 
     private void OnDrawGizmos()
