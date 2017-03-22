@@ -130,6 +130,7 @@ public class RightHand : MonoBehaviour {
             }
         } else if ((!tmp) && grabbing && inhand != null) {
             LinkedRope.instance.attach_ropes(transform, inhand.transform, pointing == null ? null : pointing.transform);
+            inhand = null;
         }
         grabbing = tmp;
     }

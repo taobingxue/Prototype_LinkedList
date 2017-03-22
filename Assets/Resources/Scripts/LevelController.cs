@@ -41,6 +41,7 @@ public class LevelController : MonoBehaviour {
 	void Start () {
         level_up();
     }
+
 	
 	// Update is called once per frame
 	void Update () {
@@ -48,6 +49,9 @@ public class LevelController : MonoBehaviour {
             level_up();
         }
 	}
+    public string current_target() {
+        return (idx < levels.Length) ? levels[idx-1].target : "FFFFFF";
+    }
 
     public void level_up() {
         clean_level();

@@ -1,18 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class LinkedRope : MonoBehaviour {
     const float DELTA = 0.01f;
 
     public static LinkedRope instance = null;
 	public GameObject rope_prefab;
-    public GameObject head;
-    public GameObject tail;
+    public Transform head;
+    public Transform tail;
 	public float rotate_angle;
+    public GameObject level_controller;
 
     public FakeRope start_rope;
     public FakeRope end_rope;
+    public GameObject result_ui;
+    public GameObject rotate_wheel;
 
     bool init_finished;
     Vector3 origin_pos;
@@ -20,6 +24,7 @@ public class LinkedRope : MonoBehaviour {
     Vector3 origin_pos_end;
     Vector3 fly_velocity= new Vector3(-0.2f,0.2f,0f);
     Transform line_start;
+    string current_string;
     public Transform line_end;
 
     public int connection_count = 0;
@@ -34,7 +39,7 @@ public class LinkedRope : MonoBehaviour {
 	}
 
     void Start() {
-        origin_pos = transform.position;
+        origin_pos = transform.position + 0.2f * Vector3.left;
     }
 
 	void Update(){
@@ -47,20 +52,44 @@ public class LinkedRope : MonoBehaviour {
                 if (connection_count != -1)  
                     line_end.position = origin_pos + (connection_count + 1) * FakeRope.DEFAULT_LEN * Vector3.left;
                 }
-        }
-	
-	}
+            if (line_start.position.x < -3.2f) {
+                head.gameObject.SetActive(true);
+                head.position = line_start.position + 0.15f * Vector3.up;   
+            }
+            else 
+                head.gameObject.SetActive(false);
+            
+            if (line_end.position.x < -3.2f) {
+                tail.gameObject.SetActive(true);
+                tail.position = line_end.position + 0.15f * Vector3.up;              
+            } 
+            else
+                tail.gameObject.SetActive(false);
+        }      
+    }
 
     int still_connect() {
         FakeRope fp = start_rope;
         int cnt = 0;
+        current_string = "";
         while (fp != end_rope) {
-            
+            current_string += fp.ch.ToString();           
             fp = fp.next_rope();
             cnt++;
             if (fp == null) return -1;
         }
+        current_string += fp.ch.ToString();
+        result_ui.GetComponent<Text>().text = "Current string :" + current_string;
+        Debug.Log(level_controller.GetComponent<LevelController>().current_target());
+        if (current_string == level_controller.GetComponent<LevelController>().current_target()) {
+            level_controller.GetComponent<LevelController>().level_up();
+            transform.FindChild("cheers").gameObject.SetActive(true);
+            Invoke("close_cheers", 3f);
+        }
         return cnt;
+    }
+    void close_cheers() {
+        transform.FindChild("cheers").gameObject.SetActive(false);
     }
 
 	/*Initialize ropes according to input string*/
@@ -70,7 +99,7 @@ public class LinkedRope : MonoBehaviour {
 	}
 
 	IEnumerator init_linked_rope (string s) {
-		int cnt = s.Length + 2;
+		int cnt = s.Length;
         Transform last_rope = transform;
         for (int i = 0; i < cnt ; i++) {
             GameObject my_rope = Instantiate(rope_prefab);
@@ -83,12 +112,11 @@ public class LinkedRope : MonoBehaviour {
                 end_rope = my_rope.GetComponent<FakeRope>();
             }
 			if (i > 0 ){
-				my_rope.GetComponent<FakeRope>().attach(last_rope);
-                if(i < cnt -1)
-				    my_rope.GetComponent<FakeRope>().set_character(s[i-1]);
+                my_rope.GetComponent<FakeRope>().attach(last_rope);
 			}
+            my_rope.GetComponent<FakeRope>().set_character(s[i]);
             last_rope = my_rope.transform;
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForEndOfFrame();
         }
         start_rope = last_rope.GetComponent<FakeRope>();
         line_start = start_rope.end;
@@ -111,34 +139,40 @@ public class LinkedRope : MonoBehaviour {
 		}
 		FakeRope src_fr = src.GetComponent<FakeRope>();
 		if (dest == null) {
-			Debug.Log("Dettach.");
-			src_fr.dettach();
             connection_count = still_connect();
             if (connection_count == -1) {
                 StartCoroutine("on_disconnected");
             }
             return true;
 		}
-		if (src_fr.not_connect_others())
-			src_fr.attach(dest);
-		else {
-			src_fr.dettach();
-			src_fr.attach(dest);
-		}
+	    src_fr.attach(dest);
+	                      
         if (dest == start_rope.transform) {
-            start_rope = src_fr;
-            line_start = src_fr.end;
+            FakeRope tmp = src_fr;
+            while (tmp.first_child() != null) {
+                tmp = tmp.first_child();
+            }
+            start_rope = tmp;
+            line_start = tmp.end;
             line_start.position = origin_pos_start;
             Debug.LogWarning("Attaching to the startnode.");
+            //change here: start node should be the child of scr_fr until there is none
         }
 
         if (src_fr == end_rope) {
             if (dest.GetComponent<FakeRope>() != null) {
-                end_rope = dest.GetComponent<FakeRope>();
+                FakeRope tmp = dest.GetComponent<FakeRope>();
+                while (tmp.next_rope() != null) {
+                    tmp = tmp.next_rope();
+                }
+                end_rope = tmp.GetComponent<FakeRope>();
                 line_end = end_rope.start;
             }
         }
         //detect connections
+        if (Mathf.Abs(GameObject.Find("hand_left").GetComponent<RotateHand>().get_offset_angle()) < 1e-5) {
+            line_start.position = origin_pos_start;
+        }
         connection_count = still_connect();
         if (connection_count == -1) {
             StartCoroutine("on_disconnected");
@@ -205,10 +239,12 @@ public class LinkedRope : MonoBehaviour {
             yield return new WaitForEndOfFrame();
             i++;
         }
-
-        foreach (FakeRope fk in to_be_delete) {
+        /*
+       foreach (FakeRope fk in to_be_delete) {
             Destroy(fk.gameObject,0.1f);
-        }
+        }*/
+        Debug.LogWarning("delete list:" + to_be_delete.Count);
+        
     }
 
     public void rope_reconstruction() {

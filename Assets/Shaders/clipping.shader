@@ -28,7 +28,7 @@
 		};
 
 		void surf (Input IN, inout SurfaceOutput o) {
-			clip(_ClipPoint - IN.worldPos.x);
+			clip(step(_ClipPoint, IN.worldPos.x) * (IN.worldPos.z - 4.8) *(IN.worldPos.z - 4.0));
 			o.Albedo = tex2D(_MainTex, IN.uv_MainTex)* _Color .rgb;
 			o.Normal = UnpackNormal(tex2D(_BumpMap, IN.uv_BumpMap));
 		}

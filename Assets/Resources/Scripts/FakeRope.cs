@@ -16,14 +16,14 @@ public class FakeRope : MonoBehaviour {
 	public float vanishing_x;
     
 	GameObject[] ring;
-
+    GameObject rotate_wheel;
     protected Vector3[] my_rope_nodes;
     //start connect to connecting_to 's end 
     public FakeRope connecting_to;
     //end connect with connecting to's start
-    protected FakeRope come_from;
+    public FakeRope come_from;
     protected LineRenderer rend;
-    protected List<FakeRope> candidate;
+    public List<FakeRope> candidate;
 
     private Vector3[] last_positions = new Vector3[2];
     private float rope_dis;
@@ -48,8 +48,6 @@ public class FakeRope : MonoBehaviour {
         last_positions[0] = start.position;
         last_positions[1] = end.position;
         update_arrow();
-		
-
     }
     #endregion
 
@@ -163,12 +161,16 @@ public class FakeRope : MonoBehaviour {
 
     void update_flag_pos() {
         Transform flag = transform.FindChild("LetterFlag");
-        flag.position =  my_rope_nodes[(SUBDIV - 1) / 2];
-
-        if (flag.position.x > vanishing_x)
+        Transform arrow = transform.FindChild("arrow");
+        flag.position =  my_rope_nodes[(SUBDIV - 1)-3];
+        float _z = flag.position.z;
+        if (flag.position.x > vanishing_x && (_z - 4.8f) * (_z - 4f) < 0) {
             flag.gameObject.SetActive(false);
-        else
+            arrow.gameObject.SetActive(false);
+        } else {
             flag.gameObject.SetActive(true);
+            arrow.gameObject.SetActive(true);
+        }
     }
 
 
@@ -227,7 +229,8 @@ public class FakeRope : MonoBehaviour {
             if (_rp.come_from == null)
                 _rp.come_from = this;
             else 
-                _rp.candidate.Add(this);
+                if(!_rp.candidate.Contains(this) && _rp.come_from != this)
+                    _rp.candidate.Add(this);
             connecting_to = _rp;
         }      
         return true;
