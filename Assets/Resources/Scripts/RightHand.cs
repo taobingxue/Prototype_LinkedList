@@ -21,6 +21,7 @@ public class RightHand : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         line_renderer = GetComponent<LineRenderer>();
+        line_renderer.enabled = false;
 	}
 	
 	// Update is called once per frame
@@ -112,6 +113,7 @@ public class RightHand : MonoBehaviour {
                 grabbing = tmp;
                 return ;
             }
+            line_renderer.enabled = true;
             if (grab_obj.GetComponent<FakeRope>().is_template) {
                 GameObject obj = Instantiate(grab_obj) as GameObject;
                 obj.GetComponent<FakeRope>().is_template = false;
@@ -129,6 +131,7 @@ public class RightHand : MonoBehaviour {
                     inhand = grab_obj;
             }
         } else if ((!tmp) && grabbing && inhand != null) {
+            line_renderer.enabled = false;
             LinkedRope.instance.attach_ropes(transform, inhand.transform, pointing == null ? null : pointing.transform);
             inhand = null;
         }
