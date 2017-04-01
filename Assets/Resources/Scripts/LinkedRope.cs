@@ -22,7 +22,7 @@ public class LinkedRope : MonoBehaviour {
     Vector3 origin_pos;
     Vector3 origin_pos_start;
     Vector3 origin_pos_end;
-    Vector3 fly_velocity= new Vector3(-0.2f,0.2f,0f);
+    Vector3 fly_velocity= new Vector3(-0.1f,0.1f,0f);
     Transform line_start;
     string current_string;
     public Transform line_end;
@@ -52,14 +52,14 @@ public class LinkedRope : MonoBehaviour {
                 if (connection_count != -1)  
                     line_end.position = origin_pos + (connection_count + 1) * FakeRope.DEFAULT_LEN * Vector3.left;
                 }
-            if (line_start.position.x < -3.2f) {
+            if (line_start.position.x < -3.5f) {
                 head.gameObject.SetActive(true);
                 head.position = line_start.position + 0.15f * Vector3.up;   
             }
             else 
                 head.gameObject.SetActive(false);
             
-            if (line_end.position.x < -3.2f) {
+            if (line_end.position.x < -3.4f) {
                 tail.gameObject.SetActive(true);
                 tail.position = line_end.position + 0.15f * Vector3.up;              
             } 
@@ -234,7 +234,7 @@ public class LinkedRope : MonoBehaviour {
             }
         }
         int i = 0;
-        while (i < 90) {
+        while (i < 300) {
             velocity_target.position +=  fly_velocity;
             yield return new WaitForEndOfFrame();
             i++;
