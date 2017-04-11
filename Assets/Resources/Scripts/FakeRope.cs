@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class FakeRope : MonoBehaviour {
     const int SUBDIV = 30;
     const float THREAD = 0.01f;
-    public static float DEFAULT_LEN = 0.6f;
+    public static float DEFAULT_LEN = 0.4f;
 
     //start is a fixed position where the rope fixed to
     public Transform start;
@@ -48,6 +48,7 @@ public class FakeRope : MonoBehaviour {
         last_positions[0] = start.position;
         last_positions[1] = end.position;
         update_arrow();
+
     }
     #endregion
 
@@ -162,7 +163,7 @@ public class FakeRope : MonoBehaviour {
     void update_flag_pos() {
         Transform flag = transform.FindChild("LetterFlag");
         Transform arrow = transform.FindChild("arrow");
-        flag.position =  my_rope_nodes[(SUBDIV - 1)-3];
+        flag.position =  my_rope_nodes[(SUBDIV - 1)-8];
         float _z = flag.position.z;
         if (flag.position.x > vanishing_x && (_z - 4.8f) * (_z - 4f) < 0) {
             flag.gameObject.SetActive(false);
@@ -248,8 +249,7 @@ public class FakeRope : MonoBehaviour {
         //if who I am connecting to comes from me
         if (connecting_to != null) {
             if (connecting_to.come_from == this) {
-                connecting_to.come_from = connecting_to.candidate.Count == 0 ? null : connecting_to.candidate[0];
-                Debug.Log("fixing candidates" + connecting_to.candidate.Count);
+                connecting_to.come_from = null;
             } 
             else {
                 connecting_to.candidate.Remove(this);
@@ -263,7 +263,7 @@ public class FakeRope : MonoBehaviour {
 		return connecting_to == null;
 	}
 
-    public List<FakeRope> other_children() {
+    public List<FakeRope> children() {
         return candidate;
     }
 

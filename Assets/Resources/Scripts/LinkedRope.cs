@@ -25,9 +25,10 @@ public class LinkedRope : MonoBehaviour {
     Vector3 fly_velocity= new Vector3(-0.1f,0.1f,0f);
     Transform line_start;
     string current_string;
-    public Transform line_end;
+    Transform line_end;
+    float tmp = 0f;
 
-    public int connection_count = 0;
+    int connection_count = 0;
     
 	
 	void Awake () {
@@ -39,7 +40,8 @@ public class LinkedRope : MonoBehaviour {
 	}
 
     void Start() {
-        origin_pos = transform.position + 0.2f * Vector3.left;
+        origin_pos = transform.position + 0.1f * Vector3.left;
+        
     }
 
 	void Update(){
@@ -47,12 +49,21 @@ public class LinkedRope : MonoBehaviour {
             float angle = GameObject.Find("hand_left").GetComponent<RotateHand>().get_offset_angle();
             if (angle > 0f)
                 line_start.position = origin_pos_start + DELTA * angle * Vector3.right;
-            else {
+            //time of releasing the wheel
+            else if (tmp != 0f) {
                 //search for the path from end to start
-                if (connection_count != -1)  
-                    line_end.position = origin_pos + (connection_count + 1) * FakeRope.DEFAULT_LEN * Vector3.left;
+                if (connection_count != -1) {
+                    StopCoroutine("fix_end");
+                    StartCoroutine("fix_end");
                 }
-            if (line_start.position.x < -3.5f) {
+                    
+            }
+            else
+                //hook start
+                line_start.position = origin_pos_start;
+
+                //control head and tail UI;
+                if (line_start.position.x < -3.5f) {
                 head.gameObject.SetActive(true);
                 head.position = line_start.position + 0.15f * Vector3.up;   
             }
@@ -65,7 +76,20 @@ public class LinkedRope : MonoBehaviour {
             } 
             else
                 tail.gameObject.SetActive(false);
+            tmp = angle;
         }      
+    }
+
+    IEnumerator fix_end() {
+        //singleton
+        int i = 100;
+        while (i > 0) {
+            line_end.position = origin_pos + (connection_count + 1) * FakeRope.DEFAULT_LEN * Vector3.left;
+            i--;
+            yield return new WaitForEndOfFrame();
+        }
+      
+
     }
 
     int still_connect() {
@@ -218,20 +242,17 @@ public class LinkedRope : MonoBehaviour {
         rope_reconstruction();
         connection_count = still_connect();
         while (search_stack.Count > 0) {
-            currentnode = search_stack.Pop();
+            currentnode = search_stack.Pop();        
             if (to_be_delete.Contains(currentnode))
                 continue;
             to_be_delete.Add(currentnode);
-            if (currentnode.first_child() == null)
-                continue;
-            else {
+            if (currentnode.first_child() != null) {
                 search_stack.Push(currentnode.first_child());
-                if (currentnode.other_children().Count == 0) continue;
-                else {
-                    foreach (FakeRope fk in currentnode.other_children())
-                        search_stack.Push(fk);
-                }
             }
+            if (currentnode.children().Count > 0){
+                foreach (FakeRope fk in currentnode.children())
+                    search_stack.Push(fk);
+            }            
         }
         int i = 0;
         while (i < 300) {
@@ -239,10 +260,10 @@ public class LinkedRope : MonoBehaviour {
             yield return new WaitForEndOfFrame();
             i++;
         }
-        /*
+        
        foreach (FakeRope fk in to_be_delete) {
             Destroy(fk.gameObject,0.1f);
-        }*/
+        }
         Debug.LogWarning("delete list:" + to_be_delete.Count);
         
     }
@@ -253,12 +274,7 @@ public class LinkedRope : MonoBehaviour {
             fp = fp.next_rope();
         }
         end_rope = fp;
+        Debug.Log("new end instance:" + fp.gameObject.GetHashCode());
         line_end = fp.start;
     }
-
-    private void OnDrawGizmos()
-	{
-		Gizmos.DrawWireSphere( Vector3.zero, 1f);
-	}
-
 }
