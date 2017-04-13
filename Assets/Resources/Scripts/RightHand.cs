@@ -46,8 +46,9 @@ public class RightHand : MonoBehaviour {
         RaycastHit hitInfo;
         Physics.Raycast(transform.position, get_point_dir(), out hitInfo, line_length);
         if (hitInfo.collider != null) {
-            if(hitInfo.collider.transform.parent.tag == "flag")
+            if (hitInfo.collider.transform.parent.tag == "flag" && hitInfo.collider.transform.parent.gameObject.GetComponent<FakeRope>().is_template == false) {
                 return hitInfo.collider.gameObject;
+            }
         }
         
         return null;
