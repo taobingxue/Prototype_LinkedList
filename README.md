@@ -1,4 +1,4 @@
-# Prototype Fractal Magic
+# Prototype Linked List
 
 [![Wonderland Logo](http://www.etc.cmu.edu/wp-content/uploads/2017/01/wonderland_logo.png)](http://www.etc.cmu.edu/projects/wonderland/)
 
