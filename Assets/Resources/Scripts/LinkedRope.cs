@@ -27,6 +27,7 @@ public class LinkedRope : MonoBehaviour {
     string current_string;
     Transform line_end;
     float tmp = 0f;
+    bool grabbing_end = false;
 
     int connection_count = 0;
     
@@ -40,7 +41,7 @@ public class LinkedRope : MonoBehaviour {
 	}
 
     void Start() {
-        origin_pos = transform.position + 0.1f * Vector3.left;
+        origin_pos = transform.position + 0.25f * Vector3.left;
         
     }
 
@@ -50,20 +51,18 @@ public class LinkedRope : MonoBehaviour {
             if (angle > 0f)
                 line_start.position = origin_pos_start + DELTA * angle * Vector3.right;
             //time of releasing the wheel
-            else if (tmp != 0f) {
+            else  {
                 //search for the path from end to start
-                if (connection_count != -1) {
-                    StopCoroutine("fix_end");
-                    StartCoroutine("fix_end");
-                }
-                    
+                if (!grabbing_end)               
+                    line_end.position = origin_pos + (connection_count + 1) * FakeRope.DEFAULT_LEN * Vector3.left;
+                 else
+                      //hook start
+                      line_start.position = origin_pos_start;                                  
             }
-            else
-                //hook start
-                line_start.position = origin_pos_start;
+          
 
-                //control head and tail UI;
-                if (line_start.position.x < -3.5f) {
+             //control head and tail UI;
+            if (line_start.position.x < -3.5f) {
                 head.gameObject.SetActive(true);
                 head.position = line_start.position + 0.15f * Vector3.up;   
             }
@@ -76,7 +75,7 @@ public class LinkedRope : MonoBehaviour {
             } 
             else
                 tail.gameObject.SetActive(false);
-            tmp = angle;
+            
         }      
     }
 
@@ -153,6 +152,7 @@ public class LinkedRope : MonoBehaviour {
 
 
 	public bool attach_ropes(Transform hand, Transform src, Transform dest = null) {
+        grabbing_end = false;
         if (hand.FindChild("start") == null && src.FindChild("start") == null) {
             Debug.LogError("The operating node is missing.");
         }
@@ -161,16 +161,35 @@ public class LinkedRope : MonoBehaviour {
 			Debug.Log("Nothing to be operated.");
 			return false;
 		}
-		FakeRope src_fr = src.GetComponent<FakeRope>();
-		if (dest == null) {
+   
+
+        if (dest == null) {
             connection_count = still_connect();
             if (connection_count == -1) {
                 StartCoroutine("on_disconnected");
             }
             return true;
 		}
-	    src_fr.attach(dest);
-	                      
+        FakeRope src_fr = src.GetComponent<FakeRope>();
+        if (dest == start_rope.transform && src_fr == end_rope) {
+            //invalid operation
+            connection_count = still_connect();
+            if (connection_count == -1) {
+                StartCoroutine("on_disconnected");
+            }
+            return false;
+        }
+        //if there is no error, could get rid of this
+        if (dest.GetComponent<FakeRope>() == src_fr.first_child()) {
+            //invalid operation
+            connection_count = still_connect();
+            if (connection_count == -1) {
+                StartCoroutine("on_disconnected");
+            }
+            return false;
+        }
+        src_fr.attach(dest);
+                   
         if (dest == start_rope.transform) {
             FakeRope tmp = src_fr;
             while (tmp.first_child() != null) {
@@ -186,14 +205,21 @@ public class LinkedRope : MonoBehaviour {
         if (src_fr == end_rope) {
             if (dest.GetComponent<FakeRope>() != null) {
                 FakeRope tmp = dest.GetComponent<FakeRope>();
-                while (tmp.next_rope() != null) {
-                    tmp = tmp.next_rope();
+                //It is here that crushed!
+                if (!circle_formed()) {
+                    while (tmp.next_rope() != null) {
+                        tmp = tmp.next_rope();
+                    }
+                    end_rope = tmp.GetComponent<FakeRope>();
+                    line_end = end_rope.start;
                 }
-                end_rope = tmp.GetComponent<FakeRope>();
-                line_end = end_rope.start;
             }
         }
         //detect connections
+        //detect circles from start, if so, reject connection
+        if (circle_formed())
+            src_fr.dettach();
+        //fixing crush
         if (Mathf.Abs(GameObject.Find("hand_left").GetComponent<RotateHand>().get_offset_angle()) < 1e-5) {
             line_start.position = origin_pos_start;
         }
@@ -203,7 +229,25 @@ public class LinkedRope : MonoBehaviour {
         }
         return true;
 	}
-	
+
+    bool circle_formed() {
+        FakeRope fp = start_rope;
+        List<FakeRope> previous = new List<FakeRope>();
+        Stack<FakeRope> node_to_search = new Stack<FakeRope>();
+        node_to_search.Push(fp);
+        while (node_to_search.Count > 0) {
+            fp = node_to_search.Pop();
+            if (!previous.Contains(fp)) {
+                previous.Add(fp);
+                if (fp.next_rope() == null) return false;
+                node_to_search.Push(fp.next_rope());
+            } else {
+                // there is a circle in the list
+                return true;
+            }
+        }
+        return false;
+    }
 	/*++++++++++++++!!!!!!!!!!!!!!!!!!!!++++++++++++++++++++++++
 				Please call this when grabbing!
 	++++++++++++++++!!!!!!!!!!!!!!!!!!!!++++++++++++++++++*/
@@ -214,6 +258,10 @@ public class LinkedRope : MonoBehaviour {
             Debug.LogWarning("Dettaching my rope!");
             //I am connecting to someone else
             fk_rp.dettach();
+        }
+
+        if (target == end_rope.transform) {
+            grabbing_end = true;
         }
         
         Transform start_node = target.FindChild("start");
@@ -274,7 +322,6 @@ public class LinkedRope : MonoBehaviour {
             fp = fp.next_rope();
         }
         end_rope = fp;
-        Debug.Log("new end instance:" + fp.gameObject.GetHashCode());
         line_end = fp.start;
     }
 }
