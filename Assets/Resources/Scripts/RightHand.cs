@@ -43,7 +43,7 @@ public class RightHand : MonoBehaviour {
     }
     
     GameObject find_pointing() {
-        if (grab_obj == null) {
+        if (inhand == null) {
             return null;
         }
 
