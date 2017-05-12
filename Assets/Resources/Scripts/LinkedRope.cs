@@ -189,16 +189,18 @@ public class LinkedRope : MonoBehaviour {
             return false;
         }
         src_fr.attach(dest);
-                   
+           
         if (dest == start_rope.transform) {
-            FakeRope tmp = src_fr;
-            while (tmp.first_child() != null) {
-                tmp = tmp.first_child();
+            if (!circle_formed()) {
+                FakeRope tmp = src_fr;
+                while (tmp.first_child() != null) {
+                    tmp = tmp.first_child();
+                }
+                start_rope = tmp;
+                line_start = tmp.end;
+                line_start.position = origin_pos_start;
+                Debug.LogWarning("Attaching to the startnode.");
             }
-            start_rope = tmp;
-            line_start = tmp.end;
-            line_start.position = origin_pos_start;
-            Debug.LogWarning("Attaching to the startnode.");
             //change here: start node should be the child of scr_fr until there is none
         }
 

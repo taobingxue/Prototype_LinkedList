@@ -6,9 +6,9 @@ public class RightHand : MonoBehaviour {
 
     public float grab_dis;
     bool grabbing;
-    GameObject grab_obj;
-    GameObject pointing;
-    GameObject inhand;
+    public GameObject grab_obj;
+    public GameObject pointing;
+    public GameObject inhand;
 
     LineRenderer line_renderer;
     public float line_length;
