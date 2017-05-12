@@ -43,6 +43,10 @@ public class RightHand : MonoBehaviour {
     }
     
     GameObject find_pointing() {
+        if (grab_obj == null) {
+            return null;
+        }
+
         RaycastHit hitInfo;
         Physics.Raycast(transform.position, get_point_dir(), out hitInfo, line_length);
         if (hitInfo.collider != null) {
